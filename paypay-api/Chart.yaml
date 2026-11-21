@@ -1,0 +1,14 @@
+apiVersion: v2
+name: paypay-api
+description: PayPay Transaction API Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - fastapi
+  - postgresql
+  - transaction
+  - paypay
+maintainers:
+  - name: PayPay Team
+    email: team@paypay.example.com

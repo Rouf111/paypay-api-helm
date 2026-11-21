@@ -1,0 +1,141 @@
+# Default values for paypay-api
+# This is a YAML-formatted file.
+
+# Application configuration
+replicaCount: 2
+
+image:
+  repository: 519019394993.dkr.ecr.ap-south-1.amazonaws.com/paypay-api
+  pullPolicy: IfNotPresent
+  tag: "1.0"
+
+imagePullSecrets:
+  - name: ecr-credentials
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: paypay-api.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Database configuration
+database:
+  # Use existing RDS (external) or deploy local PostgreSQL
+  useExternalRDS: true
+  
+  # External RDS configuration (used when useExternalRDS: true)
+  external:
+    host: "paypay-osaka-primary.chauowcsos9d.ap-south-1.rds.amazonaws.com"
+    port: 5432
+    database: "paypay"
+    username: "paypayadmin"
+    # password is set via secret
+    sslmode: "require"
+  
+  # Local PostgreSQL configuration (used when useExternalRDS: false)
+  local:
+    enabled: false
+    postgresql:
+      image:
+        repository: postgres
+        tag: "17.1"
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1Gi
+        requests:
+          cpu: 250m
+          memory: 512Mi
+      persistence:
+        enabled: true
+        size: 10Gi
+        storageClass: "gp3"
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1Gi
+        requests:
+          cpu: 250m
+          memory: 512Mi
+
+# Application environment variables
+env:
+  - name: PYTHONUNBUFFERED
+    value: "1"
+  - name: PYTHONDONTWRITEBYTECODE
+    value: "1"
+
+# Liveness and readiness probes
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Node selector and tolerations
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Service monitor for Prometheus
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
